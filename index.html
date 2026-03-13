@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTAG – Turmeric Traceability System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--turmeric:#E8A020;--turmeric-light:#F5C842;--turmeric-dark:#C4850A;--turmeric-pale:#FDF3DC;--green:#3A7D44;--green-light:#5AAF67;--green-pale:#EAF5EB;--brown:#6B3F1A;--brown-light:#8B5C2A;--brown-pale:#F5EDE3;--earth:#D4A96A;--white:#FEFCF7;--text:#2C1810;--text-muted:#8B6A52;--border:#E8D5B7;--danger:#C0392B;--shadow:0 4px 20px rgba(107,63,26,.10);--shadow-md:0 8px 32px rgba(107,63,26,.18)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);min-height:100vh}
+
+/* ── HEADER ── */
+.app-header{background:linear-gradient(135deg,var(--brown) 0%,var(--brown-light) 55%,var(--turmeric-dark) 100%);color:#fff;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(107,63,26,.3)}
+.logo-area{display:flex;align-items:center;gap:12px}
+.logo-icon{width:42px;height:42px;background:var(--turmeric-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.logo-text h1{font-family:'Playfair Display',serif;font-size:1.1rem;line-height:1.2}
+.logo-text span{font-size:.7rem;opacity:.8;letter-spacing:.5px}
+.header-right{display:flex;align-items:center;gap:12px}
+.sync-btn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;transition:background .2s}
+.sync-btn:hover{background:rgba(255,255,255,.28)}
+.sync-status{font-size:.72rem;opacity:.8}
+.mobile-menu-btn{display:none;background:transparent;border:none;color:#fff;font-size:1.5rem;cursor:pointer}
+
+/* ── LAYOUT ── */
+.app-body{display:flex;min-height:calc(100vh - 64px)}
+
+/* ── SIDEBAR ── */
+.sidebar{width:224px;min-width:224px;background:var(--brown-pale);border-right:1px solid var(--border);padding:16px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto}
+.nav-label{font-size:.63rem;font-weight:700;letter-spacing:1.5px;color:var(--text-muted);text-transform:uppercase;padding:12px 18px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;border-left:3px solid transparent;font-size:.84rem;font-weight:500;color:var(--brown);transition:all .2s}
+.nav-item:hover{background:rgba(232,160,32,.1);color:var(--turmeric-dark)}
+.nav-item.active{background:var(--turmeric-pale);border-left-color:var(--turmeric);color:var(--turmeric-dark);font-weight:700}
+.nav-icon{font-size:1rem;width:20px;text-align:center}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}
+
+/* ── MAIN ── */
+.main-content{flex:1;padding:24px;overflow-y:auto;min-width:0}
+.page-header{margin-bottom:20px}
+.page-header h2{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--brown)}
+.page-header p{color:var(--text-muted);font-size:.85rem;margin-top:3px}
+
+/* ── SETUP MODAL ── */
+.setup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;padding:20px}
+.setup-overlay.open{display:flex}
+.setup-box{background:#fff;border-radius:20px;padding:36px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.setup-logo{text-align:center;margin-bottom:24px}
+.setup-logo .icon{font-size:3rem}
+.setup-logo h2{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--brown);margin-top:8px}
+.setup-logo p{font-size:.85rem;color:var(--text-muted);margin-top:4px}
+.setup-step{background:var(--turmeric-pale);border-radius:12px;padding:16px;margin-bottom:14px;font-size:.84rem;line-height:1.7;border-left:4px solid var(--turmeric)}
+.setup-step strong{color:var(--turmeric-dark)}
+.setup-input-group{margin:20px 0}
+.setup-input-group label{font-size:.78rem;font-weight:700;color:var(--brown);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px}
+.setup-input-group input{width:100%;border:2px solid var(--border);border-radius:10px;padding:11px 14px;font-size:.88rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.setup-input-group input:focus{border-color:var(--turmeric)}
+.setup-actions{display:flex;gap:10px;margin-top:4px}
+
+/* ── LOADING OVERLAY ── */
+.loader-overlay{display:none;position:fixed;inset:0;background:rgba(255,252,247,.8);z-index:400;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.loader-overlay.open{display:flex}
+.spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--turmeric);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-msg{font-size:.9rem;color:var(--brown);font-weight:500}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow);border-top:4px solid var(--turmeric)}
+.stat-card:nth-child(2){border-top-color:var(--green)}
+.stat-card:nth-child(3){border-top-color:var(--earth)}
+.stat-card:nth-child(4){border-top-color:var(--brown-light)}
+.stat-card:nth-child(5){border-top-color:var(--turmeric-dark)}
+.stat-icon{font-size:1.8rem;margin-bottom:6px}
+.stat-value{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--brown);line-height:1}
+.stat-label{font-size:.72rem;color:var(--text-muted);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── CARDS ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:18px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--brown)}
+
+/* ── FORMS ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:.75rem;font-weight:700;color:var(--brown);text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:.87rem;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--turmeric);box-shadow:0 0 0 3px rgba(232,160,32,.15)}
+.form-group textarea{resize:vertical;min-height:68px}
+.auto-id{background:var(--turmeric-pale)!important;color:var(--turmeric-dark)!important;font-weight:700!important;cursor:default!important}
+.form-section-title{font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);padding:10px 0 3px;grid-column:1/-1;border-bottom:1px solid var(--border)}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 18px;border-radius:8px;font-size:.84rem;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:7px;transition:all .2s;font-family:'DM Sans',sans-serif}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--turmeric);color:var(--brown)}
+.btn-primary:hover:not(:disabled){background:var(--turmeric-dark);color:#fff}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover{background:var(--green-light)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--turmeric);color:var(--turmeric-dark)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:5px 10px;font-size:.75rem}
+.btn-excel{background:#217346;color:#fff}
+.btn-csv{background:var(--brown-light);color:#fff}
+.btn-pdf{background:var(--danger);color:#fff}
+.btn-sheets{background:#4285F4;color:#fff}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.export-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+/* ── TABS ── */
+.tab-bar{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:18px;overflow-x:auto}
+.tab-btn{padding:8px 18px;border:none;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:500;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .2s}
+.tab-btn.active{color:var(--turmeric-dark);border-bottom-color:var(--turmeric);font-weight:700}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:.81rem}
+thead tr{background:var(--turmeric-pale)}
+th{padding:9px 11px;text-align:left;font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--brown);border-bottom:2px solid var(--border);white-space:nowrap}
+td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(232,160,32,.04)}
+.empty-cell{text-align:center;padding:36px;color:var(--text-muted);font-size:.87rem}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700}
+.bg-green{background:var(--green-pale);color:var(--green)}
+.bg-yellow{background:var(--turmeric-pale);color:var(--turmeric-dark)}
+.bg-red{background:#fdecea;color:var(--danger)}
+.bg-brown{background:var(--brown-pale);color:var(--brown)}
+.trace-chip{font-family:monospace;font-size:.72rem;background:var(--turmeric-pale);color:var(--turmeric-dark);padding:2px 7px;border-radius:4px;letter-spacing:.5px}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filter-bar input,.filter-bar select{border:1.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:.83rem;font-family:'DM Sans',sans-serif;outline:none;min-width:150px}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--turmeric)}
+
+/* ── TRACE RESULT ── */
+.trace-banner{background:var(--turmeric-pale);border:1px solid var(--earth);border-radius:12px;padding:14px 18px;margin:14px 0}
+.trace-banner .t-label{font-size:.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.trace-banner .t-val{font-family:monospace;font-size:1.2rem;color:var(--turmeric-dark);font-weight:700;letter-spacing:1.5px}
+
+/* ── REPORT CARDS ── */
+.report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.report-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;transition:box-shadow .2s}
+.report-card:hover{box-shadow:var(--shadow-md);border-color:var(--turmeric)}
+.rc-icon{font-size:2rem}
+.rc-title{font-weight:700;color:var(--brown);font-size:.92rem}
+.rc-desc{font-size:.78rem;color:var(--text-muted)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:22px;right:22px;background:var(--green);color:#fff;padding:11px 18px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:var(--shadow-md);z-index:600;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;transform:translateY(8px)}
+#toast.show{opacity:1;transform:translateY(0)}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:24px;max-width:580px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-md)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--brown)}
+.modal-close{background:transparent;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);line-height:1}
+
+/* ── SECTIONS ── */
+.page-section{display:none}
+.page-section.active{display:block;animation:fadeIn .22s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .mobile-menu-btn{display:block}
+  .sidebar{position:fixed;left:-224px;top:64px;height:calc(100vh - 64px);z-index:95;transition:left .3s}
+  .sidebar.open{left:0}
+  .sidebar-overlay.open{display:block}
+  .main-content{padding:14px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+  .header-right .sync-status{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP MODAL -->
+<div class="setup-overlay" id="setup-overlay">
+  <div class="setup-box">
+    <div class="setup-logo">
+      <div class="icon">🌿</div>
+      <h2>MTAG System Setup</h2>
+      <p>One-time configuration — takes less than 2 minutes</p>
+    </div>
+
+    <div class="setup-step">
+      <strong>Step 1:</strong> Open <a href="https://script.google.com" target="_blank">script.google.com</a> → Create a new project named <strong>MTAG_Backend</strong>
+    </div>
+    <div class="setup-step">
+      <strong>Step 2:</strong> Paste the full contents of <strong>Code.gs</strong> into the editor. Run <strong>initializeSheets()</strong> once (grant permissions).
+    </div>
+    <div class="setup-step">
+      <strong>Step 3:</strong> Click <strong>Deploy → New Deployment</strong> → Type: <em>Web App</em> → Execute as: <em>Me</em> → Who has access: <em>Anyone</em> → Deploy. Copy the Web App URL.
+    </div>
+
+    <div class="setup-input-group">
+      <label>Paste Your Apps Script Web App URL</label>
+      <input id="setup-url-input" placeholder="https://script.google.com/macros/s/…/exec" type="url">
+    </div>
+
+    <div class="setup-actions">
+      <button class="btn btn-primary" onclick="saveSetup()">✔ Connect & Start</button>
+      <button class="btn btn-outline btn-sm" onclick="testConnection()">🔗 Test Connection</button>
+    </div>
+    <div id="setup-msg" style="margin-top:12px;font-size:.82rem;color:var(--danger)"></div>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loader-overlay" id="loader-overlay">
+  <div class="spinner"></div>
+  <div class="loader-msg" id="loader-msg">Loading data…</div>
+</div>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="logo-area">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="logo-icon">🌿</div>
+    <div class="logo-text">
+      <h1>MTAG Industries</h1>
+      <span>Turmeric Seed Distribution & Traceability</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="sync-status" id="sync-status">⏳ Loading…</div>
+    <button class="sync-btn" onclick="syncData()">🔄 Sync</button>
+    <button class="sync-btn" onclick="openSetup()" title="Settings">⚙️</button>
+  </div>
+</header>
+
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div class="app-body">
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="nav-label">Overview</div>
+  <div class="nav-item active" onclick="showSection('dashboard',this)"><span class="nav-icon">📊</span> Dashboard</div>
+  <div class="nav-label">Registration</div>
+  <div class="nav-item" onclick="showSection('villages',this)"><span class="nav-icon">🏘️</span> Villages</div>
+  <div class="nav-item" onclick="showSection('farmers',this)"><span class="nav-icon">👨‍🌾</span> Farmers</div>
+  <div class="nav-label">Seed Program</div>
+  <div class="nav-item" onclick="showSection('distribution',this)"><span class="nav-icon">🌱</span> Seed Distribution</div>
+  <div class="nav-item" onclick="showSection('cultivation',this)"><span class="nav-icon">🌾</span> Cultivation Tracking</div>
+  <div class="nav-label">Harvest</div>
+  <div class="nav-item" onclick="showSection('harvest',this)"><span class="nav-icon">🧺</span> Harvest & Procurement</div>
+  <div class="nav-item" onclick="showSection('traceability',this)"><span class="nav-icon">🔍</span> Traceability</div>
+  <div class="nav-label">Reports</div>
+  <div class="nav-item" onclick="showSection('reports',this)"><span class="nav-icon">📄</span> Reports & Export</div>
+</nav>
+
+<main class="main-content">
+
+<!-- ════ DASHBOARD ════ -->
+<section id="dashboard" class="page-section active">
+  <div class="page-header">
+    <h2>🌿 Program Dashboard</h2>
+    <p>Live data from Google Sheets — synced across all devices</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">🏘️</div><div class="stat-value" id="s-villages">—</div><div class="stat-label">Villages</div></div>
+    <div class="stat-card"><div class="stat-icon">👨‍🌾</div><div class="stat-value" id="s-farmers">—</div><div class="stat-label">Farmers</div></div>
+    <div class="stat-card"><div class="stat-icon">🌾</div><div class="stat-value" id="s-area">—</div><div class="stat-label">Acres (Turmeric)</div></div>
+    <div class="stat-card"><div class="stat-icon">🌱</div><div class="stat-value" id="s-seed">—</div><div class="stat-label">Seed Dist. (Kg)</div></div>
+    <div class="stat-card"><div class="stat-icon">🧺</div><div class="stat-value" id="s-harv">—</div><div class="stat-label">Harvested (Kg)</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Recent Distributions</div></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Village</th><th>Farmer</th><th>Variety</th><th>Qty (Kg)</th><th>Batch</th></tr></thead>
+      <tbody id="dash-dist-body"><tr><td colspan="6" class="empty-cell">Syncing…</td></tr></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ════ VILLAGES ════ -->
+<section id="villages" class="page-section">
+  <div class="page-header"><h2>🏘️ Village Registration</h2><p>Add and manage villages</p></div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('vill','add',this)">Add Village</button>
+    <button class="tab-btn" onclick="switchTab('vill','list',this)">Village List</button>
+  </div>
+
+  <div id="vill-add" class="card">
+    <div class="card-header"><div class="card-title">Register New Village</div></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Village ID</label><input class="auto-id" id="vill-id" readonly></div>
+      <div class="form-group"><label>Village Name *</label><input id="vill-name" placeholder="e.g. Sundarpur"></div>
+      <div class="form-group"><label>Mandal / Block *</label><input id="vill-mandal" placeholder="Enter mandal"></div>
+      <div class="form-group"><label>District *</label><input id="vill-district" placeholder="District name"></div>
+      <div class="form-group"><label>State *</label>
+        <select id="vill-state"><option value="">Select State</option><option>Andhra Pradesh</option><option>Telangana</option><option>Tamil Nadu</option><option>Maharashtra</option><option>Odisha</option><option>Assam</option><option>Karnataka</option><option>Uttar Pradesh</option><option>Madhya Pradesh</option><option>Other</option></select>
+      </div>
+      <div class="form-group"><label>GPS (Optional)</label><input id="vill-gps" placeholder="16.5062, 80.6480"></div>
+      <div class="form-group"><label>Coordinator Name *</label><input id="vill-coord-name" placeholder="Full name"></div>
+      <div class="form-group"><label>Coordinator Phone *</label><input id="vill-coord-phone" placeholder="Mobile number"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Remarks</label><textarea id="vill-remarks" placeholder="Additional notes…"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="btn-save-village" onclick="saveVillage()">💾 Save to Google Sheets</button>
+      <button class="btn btn-outline" onclick="resetVillageForm()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div id="vill-list" style="display:none">
+    <div class="filter-bar">
+      <input id="vill-search" placeholder="🔍 Search village…" oninput="renderVillageTable()">
+      <div class="export-row">
+        <button class="btn btn-excel btn-sm" onclick="exportExcel('villages')">📊 Excel</button>
+        <button class="btn btn-csv btn-sm" onclick="exportCSV('villages')">📁 CSV</button>
+        <button class="btn btn-pdf btn-sm" onclick="exportPDF('villages')">📄 PDF</button>
+      </div>
+    </div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Village</th><th>Mandal</th><th>District</th><th>State</th><th>Coordinator</th><th>Phone</th><th>Farmers</th><th>Actions</th></tr></thead>
+      <tbody id="vill-tbody"></tbody>
+    </table></div></div>
+  </div>
+</section>
+
+<!-- ════ FARMERS ════ -->
+<section id="farmers" class="page-section">
+  <div class="page-header"><h2>👨‍🌾 Farmer Registration</h2><p>Register farmers and auto-generate traceability codes</p></div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('farm','add',this)">Register Farmer</button>
+    <button class="tab-btn" onclick="switchTab('farm','list',this)">Farmer List</button>
+  </div>
+
+  <div id="farm-add" class="card">
+    <div class="card-header"><div class="card-title">New Farmer Registration</div></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Farmer ID</label><input class="auto-id" id="farm-id" readonly></div>
+      <div class="form-group"><label>Village *</label><select id="farm-village"><option value="">— Select Village —</option></select></div>
+      <div class="form-group"><label>Farmer Name *</label><input id="farm-name" placeholder="Full name"></div>
+      <div class="form-group"><label>Gender</label><select id="farm-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+      <div class="form-group"><label>Father / Husband Name *</label><input id="farm-father" placeholder="Father / Husband"></div>
+      <div class="form-group"><label>Mobile *</label><input id="farm-mobile" placeholder="10-digit number"></div>
+      <div class="form-group"><label>Aadhar Number</label><input id="farm-aadhar" placeholder="12-digit Aadhar"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Address</label><textarea id="farm-address" placeholder="Full address"></textarea></div>
+      <div class="form-group"><label>FPO Member</label><select id="farm-fpo"><option>No</option><option>Yes</option></select></div>
+      <div class="form-section-title">Land Details</div>
+      <div class="form-group"><label>Total Land (Acres) *</label><input id="farm-total-land" type="number" step="0.1" placeholder="0.0"></div>
+      <div class="form-group"><label>Turmeric Land (Acres) *</label><input id="farm-turmeric-land" type="number" step="0.1" placeholder="0.0"></div>
+      <div class="form-group"><label>Soil Type</label><select id="farm-soil"><option value="">Select</option><option>Red Soil</option><option>Black Soil</option><option>Alluvial</option><option>Sandy Loam</option><option>Clay</option><option>Other</option></select></div>
+      <div class="form-group"><label>Farming Type</label><select id="farm-type"><option>Conventional</option><option>Organic</option></select></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Traceability Code (Auto)</label><input class="auto-id" id="farm-trace" readonly placeholder="Generated on save"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveFarmer()">💾 Save to Google Sheets</button>
+      <button class="btn btn-outline" onclick="resetFarmerForm()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div id="farm-list" style="display:none">
+    <div class="filter-bar">
+      <input id="farm-search" placeholder="🔍 Search name, ID…" oninput="renderFarmerTable()">
+      <select id="farm-filter-vill" onchange="renderFarmerTable()"><option value="">All Villages</option></select>
+      <div class="export-row">
+        <button class="btn btn-excel btn-sm" onclick="exportExcel('farmers')">📊 Excel</button>
+        <button class="btn btn-csv btn-sm" onclick="exportCSV('farmers')">📁 CSV</button>
+        <button class="btn btn-pdf btn-sm" onclick="exportPDF('farmers')">📄 PDF</button>
+      </div>
+    </div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Farmer ID</th><th>Village</th><th>Name</th><th>Mobile</th><th>Total (ac)</th><th>Turmeric (ac)</th><th>FPO</th><th>Type</th><th>Trace Code</th><th>Actions</th></tr></thead>
+      <tbody id="farm-tbody"></tbody>
+    </table></div></div>
+  </div>
+</section>
+
+<!-- ════ DISTRIBUTION ════ -->
+<section id="distribution" class="page-section">
+  <div class="page-header"><h2>🌱 Seed Distribution</h2><p>Track every seed distribution event</p></div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('dist','add',this)">Add Distribution</button>
+    <button class="tab-btn" onclick="switchTab('dist','list',this)">Records</button>
+  </div>
+
+  <div id="dist-add" class="card">
+    <div class="card-header"><div class="card-title">Record Seed Distribution</div></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Distribution ID</label><input class="auto-id" id="dist-id" readonly></div>
+      <div class="form-group"><label>Date *</label><input id="dist-date" type="date"></div>
+      <div class="form-group"><label>Village *</label><select id="dist-village" onchange="loadFarmerDrop('dist-farmer','dist-village')"><option value="">— Select Village —</option></select></div>
+      <div class="form-group"><label>Farmer *</label><select id="dist-farmer"><option value="">— Select Farmer —</option></select></div>
+      <div class="form-group"><label>Turmeric Variety *</label>
+        <select id="dist-variety"><option value="">Select</option><option>Lakadong</option><option>Rajapuri</option><option>Salem Local</option><option>Alleppey Finger</option><option>Cuddapah</option><option>IISR Pragati</option><option>IISR Alleppey Supreme</option><option>CO-1</option><option>Other</option></select>
+      </div>
+      <div class="form-group"><label>Seed Batch No. *</label><input id="dist-batch" placeholder="e.g. BATCH-2026-001"></div>
+      <div class="form-group"><label>Quantity (Kg) *</label><input id="dist-qty" type="number" step="0.5" placeholder="0"></div>
+      <div class="form-group"><label>Expected Yield (Kg)</label><input id="dist-yield" type="number" placeholder="Optional"></div>
+      <div class="form-group"><label>Seed Source *</label>
+        <select id="dist-source"><option>MTAG Nursery</option><option>Synthite Program</option><option>Local Seed</option><option>Government Supply</option><option>IISR</option></select>
+      </div>
+      <div class="form-group"><label>Distribution Officer *</label><input id="dist-officer" placeholder="Officer name"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveDistribution()">💾 Save to Google Sheets</button>
+      <button class="btn btn-outline" onclick="resetDistForm()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div id="dist-list" style="display:none">
+    <div class="filter-bar">
+      <input id="dist-search" placeholder="🔍 Search farmer, batch…" oninput="renderDistTable()">
+      <select id="dist-filter-vill" onchange="renderDistTable()"><option value="">All Villages</option></select>
+      <input id="dist-filter-batch" placeholder="Batch filter" oninput="renderDistTable()">
+      <div class="export-row">
+        <button class="btn btn-excel btn-sm" onclick="exportExcel('distributions')">📊 Excel</button>
+        <button class="btn btn-csv btn-sm" onclick="exportCSV('distributions')">📁 CSV</button>
+        <button class="btn btn-pdf btn-sm" onclick="exportPDF('distributions')">📄 PDF</button>
+      </div>
+    </div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Dist ID</th><th>Date</th><th>Village</th><th>Farmer</th><th>Variety</th><th>Batch</th><th>Qty (Kg)</th><th>Source</th><th>Officer</th><th>Action</th></tr></thead>
+      <tbody id="dist-tbody"></tbody>
+    </table></div></div>
+  </div>
+</section>
+
+<!-- ════ CULTIVATION ════ -->
+<section id="cultivation" class="page-section">
+  <div class="page-header"><h2>🌾 Cultivation Tracking</h2><p>Field inspections and crop status</p></div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('cult','add',this)">Add Record</button>
+    <button class="tab-btn" onclick="switchTab('cult','list',this)">Records</button>
+  </div>
+
+  <div id="cult-add" class="card">
+    <div class="card-header"><div class="card-title">Cultivation & Inspection Record</div></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Village *</label><select id="cult-village" onchange="loadFarmerDrop('cult-farmer','cult-village')"><option value="">— Select Village —</option></select></div>
+      <div class="form-group"><label>Farmer *</label><select id="cult-farmer"><option value="">— Select Farmer —</option></select></div>
+      <div class="form-group"><label>Seed Batch No. *</label><input id="cult-batch" placeholder="Batch number"></div>
+      <div class="form-group"><label>Field Location</label><input id="cult-field" placeholder="Survey No. / GPS"></div>
+      <div class="form-group"><label>Date of Planting *</label><input id="cult-plant-date" type="date"></div>
+      <div class="form-group"><label>Expected Harvest Date</label><input id="cult-harvest-date" type="date"></div>
+      <div class="form-section-title">Field Inspection</div>
+      <div class="form-group"><label>Inspection Date</label><input id="cult-inspect-date" type="date"></div>
+      <div class="form-group"><label>Inspecting Officer</label><input id="cult-officer" placeholder="Officer name"></div>
+      <div class="form-group"><label>Crop Status *</label>
+        <select id="cult-status"><option>Healthy</option><option>Moderate</option><option>Poor</option></select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1"><label>Notes</label><textarea id="cult-notes" placeholder="Observations, recommendations…"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveCultivation()">💾 Save to Google Sheets</button>
+      <button class="btn btn-outline" onclick="resetCultForm()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div id="cult-list" style="display:none">
+    <div class="filter-bar">
+      <input id="cult-search" placeholder="🔍 Search…" oninput="renderCultTable()">
+      <select id="cult-filter-vill" onchange="renderCultTable()"><option value="">All Villages</option></select>
+      <select id="cult-filter-status" onchange="renderCultTable()"><option value="">All Status</option><option>Healthy</option><option>Moderate</option><option>Poor</option></select>
+      <div class="export-row">
+        <button class="btn btn-excel btn-sm" onclick="exportExcel('cultivation')">📊 Excel</button>
+        <button class="btn btn-csv btn-sm" onclick="exportCSV('cultivation')">📁 CSV</button>
+        <button class="btn btn-pdf btn-sm" onclick="exportPDF('cultivation')">📄 PDF</button>
+      </div>
+    </div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Village</th><th>Farmer</th><th>Batch</th><th>Planted</th><th>Exp. Harvest</th><th>Inspected</th><th>Officer</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="cult-tbody"></tbody>
+    </table></div></div>
+  </div>
+</section>
+
+<!-- ════ HARVEST ════ -->
+<section id="harvest" class="page-section">
+  <div class="page-header"><h2>🧺 Harvest & Procurement</h2><p>Record turmeric harvest and MTAG procurement</p></div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('harv','add',this)">Add Harvest</button>
+    <button class="tab-btn" onclick="switchTab('harv','list',this)">Records</button>
+  </div>
+
+  <div id="harv-add" class="card">
+    <div class="card-header"><div class="card-title">Harvest & Procurement Entry</div></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Lot ID</label><input class="auto-id" id="harv-lot-id" readonly></div>
+      <div class="form-group"><label>Village *</label><select id="harv-village" onchange="loadFarmerDrop('harv-farmer','harv-village')"><option value="">— Select Village —</option></select></div>
+      <div class="form-group"><label>Farmer *</label><select id="harv-farmer" onchange="fillHarvestTrace()"><option value="">— Select Farmer —</option></select></div>
+      <div class="form-group"><label>Harvest Date *</label><input id="harv-date" type="date"></div>
+      <div class="form-group"><label>Green Turmeric (Kg) *</label><input id="harv-green" type="number" step="0.5" placeholder="0"></div>
+      <div class="form-group"><label>MTAG Procured (Kg)</label><input id="harv-procure" type="number" step="0.5" placeholder="0"></div>
+      <div class="form-group"><label>Price (₹/Kg)</label><input id="harv-price" type="number" step="0.5" placeholder="0"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Traceability Code (Auto)</label><input class="auto-id" id="harv-trace" readonly placeholder="Auto from farmer"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveHarvest()">💾 Save to Google Sheets</button>
+      <button class="btn btn-outline" onclick="resetHarvestForm()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div id="harv-list" style="display:none">
+    <div class="filter-bar">
+      <input id="harv-search" placeholder="🔍 Search…" oninput="renderHarvestTable()">
+      <select id="harv-filter-vill" onchange="renderHarvestTable()"><option value="">All Villages</option></select>
+      <input id="harv-filter-date" type="date" onchange="renderHarvestTable()">
+      <div class="export-row">
+        <button class="btn btn-excel btn-sm" onclick="exportExcel('harvest')">📊 Excel</button>
+        <button class="btn btn-csv btn-sm" onclick="exportCSV('harvest')">📁 CSV</button>
+        <button class="btn btn-pdf btn-sm" onclick="exportPDF('harvest')">📄 PDF</button>
+      </div>
+    </div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Lot ID</th><th>Village</th><th>Farmer</th><th>Date</th><th>Green (Kg)</th><th>Procured (Kg)</th><th>Price (₹/Kg)</th><th>Trace Code</th><th>Action</th></tr></thead>
+      <tbody id="harv-tbody"></tbody>
+    </table></div></div>
+  </div>
+</section>
+
+<!-- ════ TRACEABILITY ════ -->
+<section id="traceability" class="page-section">
+  <div class="page-header"><h2>🔍 Traceability System</h2><p>Full crop journey — village → farm → seed → harvest</p></div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Search by Traceability Code or Farmer</div></div>
+    <div class="filter-bar">
+      <input id="trace-q" placeholder="Enter MTAG-TUR-2026-VLG001-FRM015 or farmer name…" style="flex:1;min-width:260px">
+      <button class="btn btn-primary" onclick="searchTrace()">🔍 Search</button>
+    </div>
+    <div id="trace-result"></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-header"><div class="card-title">All Traceability Records</div></div>
+    <div class="filter-bar">
+      <select id="trace-filter-vill" onchange="renderTraceTable()"><option value="">All Villages</option></select>
+      <div class="export-row">
+        <button class="btn btn-excel btn-sm" onclick="exportExcel('trace')">📊 Excel</button>
+        <button class="btn btn-csv btn-sm" onclick="exportCSV('trace')">📁 CSV</button>
+        <button class="btn btn-pdf btn-sm" onclick="exportPDF('trace')">📄 PDF</button>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Trace Code</th><th>Village</th><th>Farmer</th><th>Seed Batch</th><th>Lot ID</th><th>Green (Kg)</th><th>Procured (Kg)</th></tr></thead>
+      <tbody id="trace-tbody"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ════ REPORTS ════ -->
+<section id="reports" class="page-section">
+  <div class="page-header"><h2>📄 Reports & Export</h2><p>Download data for Synthite, Spices Board, NABARD & EU buyers</p></div>
+  <div class="report-grid">
+    <div class="report-card"><div class="rc-icon">🏘️</div><div class="rc-title">Village Report</div><div class="rc-desc">All registered villages with coordinators</div><div class="export-row"><button class="btn btn-excel btn-sm" onclick="exportExcel('villages')">📊 Excel</button><button class="btn btn-csv btn-sm" onclick="exportCSV('villages')">📁 CSV</button><button class="btn btn-pdf btn-sm" onclick="exportPDF('villages')">📄 PDF</button></div></div>
+    <div class="report-card"><div class="rc-icon">👨‍🌾</div><div class="rc-title">Farmer List</div><div class="rc-desc">Complete farmer registry with land details</div><div class="export-row"><button class="btn btn-excel btn-sm" onclick="exportExcel('farmers')">📊 Excel</button><button class="btn btn-csv btn-sm" onclick="exportCSV('farmers')">📁 CSV</button><button class="btn btn-pdf btn-sm" onclick="exportPDF('farmers')">📄 PDF</button></div></div>
+    <div class="report-card"><div class="rc-icon">🌱</div><div class="rc-title">Seed Distribution</div><div class="rc-desc">All distributions with batch & source</div><div class="export-row"><button class="btn btn-excel btn-sm" onclick="exportExcel('distributions')">📊 Excel</button><button class="btn btn-csv btn-sm" onclick="exportCSV('distributions')">📁 CSV</button><button class="btn btn-pdf btn-sm" onclick="exportPDF('distributions')">📄 PDF</button></div></div>
+    <div class="report-card"><div class="rc-icon">🌾</div><div class="rc-title">Cultivation Report</div><div class="rc-desc">Field inspections and crop health</div><div class="export-row"><button class="btn btn-excel btn-sm" onclick="exportExcel('cultivation')">📊 Excel</button><button class="btn btn-csv btn-sm" onclick="exportCSV('cultivation')">📁 CSV</button><button class="btn btn-pdf btn-sm" onclick="exportPDF('cultivation')">📄 PDF</button></div></div>
+    <div class="report-card"><div class="rc-icon">🧺</div><div class="rc-title">Harvest Report</div><div class="rc-desc">Harvest and MTAG procurement summary</div><div class="export-row"><button class="btn btn-excel btn-sm" onclick="exportExcel('harvest')">📊 Excel</button><button class="btn btn-csv btn-sm" onclick="exportCSV('harvest')">📁 CSV</button><button class="btn btn-pdf btn-sm" onclick="exportPDF('harvest')">📄 PDF</button></div></div>
+    <div class="report-card"><div class="rc-icon">🔍</div><div class="rc-title">Traceability Report</div><div class="rc-desc">Full chain — EU certification ready</div><div class="export-row"><button class="btn btn-excel btn-sm" onclick="exportExcel('trace')">📊 Excel</button><button class="btn btn-csv btn-sm" onclick="exportCSV('trace')">📁 CSV</button><button class="btn btn-pdf btn-sm" onclick="exportPDF('trace')">📄 PDF</button></div></div>
+    <div class="report-card"><div class="rc-icon">📤</div><div class="rc-title">Export All → Google Sheets</div><div class="rc-desc">Download all CSVs for Google Sheets import</div><div class="export-row"><button class="btn btn-sheets btn-sm" onclick="exportAllCSV()">📤 All CSV Files</button></div></div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="view-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Details</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  MTAG SYSTEM — JAVASCRIPT
+// ════════════════════════════════════════════════════════════
+
+// ── CONFIG ──────────────────────────────────────────────────
+let SCRIPT_URL = localStorage.getItem('mtag_script_url') || '';
+let DB = { villages:[], farmers:[], distributions:[], cultivation:[], harvest:[] };
+
+// ── SETUP ───────────────────────────────────────────────────
+function openSetup() {
+  document.getElementById('setup-url-input').value = SCRIPT_URL;
+  document.getElementById('setup-overlay').classList.add('open');
+}
+function closeSetup() { document.getElementById('setup-overlay').classList.remove('open'); }
+
+async function saveSetup() {
+  const url = document.getElementById('setup-url-input').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    document.getElementById('setup-msg').textContent = '❌ URL must start with https://script.google.com…';
+    return;
+  }
+  SCRIPT_URL = url;
+  localStorage.setItem('mtag_script_url', url);
+  closeSetup();
+  await syncData();
+}
+
+async function testConnection() {
+  const url = document.getElementById('setup-url-input').value.trim();
+  if (!url) { document.getElementById('setup-msg').textContent = '⚠️ Enter a URL first'; return; }
+  document.getElementById('setup-msg').textContent = '⏳ Testing…';
+  try {
+    const res = await fetch(`${url}?action=ping`);
+    const data = await res.json();
+    document.getElementById('setup-msg').style.color = 'var(--green)';
+    document.getElementById('setup-msg').textContent = data.success ? '✅ ' + data.message : '❌ Script responded but returned error';
+  } catch(e) {
+    document.getElementById('setup-msg').style.color = 'var(--danger)';
+    document.getElementById('setup-msg').textContent = '❌ Connection failed. Check URL and deployment settings.';
+  }
+}
+
+// ── DATA SYNC ────────────────────────────────────────────────
+async function syncData() {
+  if (!SCRIPT_URL) { openSetup(); return; }
+  showLoader('Syncing with Google Sheets…');
+  setSyncStatus('⏳ Syncing…');
+  try {
+    const res = await fetch(`${SCRIPT_URL}?action=getAll`);
+    const data = await res.json();
+    if (data.success) {
+      DB = data.data;
+      refreshAllViews();
+      setSyncStatus('✅ Synced ' + timeNow());
+      showToast('✅ Data synced from Google Sheets');
+    } else {
+      setSyncStatus('❌ Sync error');
+      showToast('❌ Sync failed: ' + data.error, 'err');
+    }
+  } catch(e) {
+    setSyncStatus('❌ Offline?');
+    showToast('❌ Cannot reach Google Sheets. Check connection.', 'err');
+  }
+  hideLoader();
+}
+
+async function apiPost(payload) {
+  const res = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  if (!SCRIPT_URL) { openSetup(); return; }
+  initFormDefaults();
+  syncData();
+});
+
+function initFormDefaults() {
+  const today = new Date().toISOString().split('T')[0];
+  ['dist-date','harv-date','cult-inspect-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+}
+
+function refreshAllViews() {
+  updateDashboard();
+  populateVillageDropdowns();
+  genIds();
+  renderVillageTable(); renderFarmerTable(); renderDistTable();
+  renderCultTable(); renderHarvestTable(); renderTraceTable();
+}
+
+// ── ID GENERATORS ────────────────────────────────────────────
+function pad(n, len) { return String(n).padStart(len, '0'); }
+function genIds() {
+  document.getElementById('vill-id').value    = 'VLG' + pad(DB.villages.length + 1, 3);
+  document.getElementById('farm-id').value    = 'FRM' + pad(DB.farmers.length + 1, 3);
+  document.getElementById('dist-id').value    = 'DST' + pad(DB.distributions.length + 1, 4);
+  document.getElementById('harv-lot-id').value = 'LOT' + pad(DB.harvest.length + 1, 4);
+}
+
+function makeTrace(villId, farmId) {
+  return `MTAG-TUR-${new Date().getFullYear()}-${villId}-${farmId}`;
+}
+
+// ── DROPDOWN HELPERS ─────────────────────────────────────────
+function populateVillageDropdowns() {
+  const selectors = ['farm-village','dist-village','cult-village','harv-village',
+                     'dist-filter-vill','farm-filter-vill','cult-filter-vill','harv-filter-vill','trace-filter-vill'];
+  selectors.forEach(sid => {
+    const el = document.getElementById(sid);
+    if (!el) return;
+    const prev = el.value;
+    const isFilter = sid.includes('filter');
+    el.innerHTML = `<option value="">${isFilter ? 'All Villages' : '— Select Village —'}</option>`;
+    DB.villages.forEach(v => {
+      const o = document.createElement('option');
+      o.value = v.id; o.textContent = v.name; el.appendChild(o);
+    });
+    el.value = prev;
+  });
+}
+
+function loadFarmerDrop(farmSel, villSel) {
+  const villId = document.getElementById(villSel).value;
+  const sel = document.getElementById(farmSel);
+  sel.innerHTML = '<option value="">— Select Farmer —</option>';
+  DB.farmers.filter(f => !villId || f.villageId === villId).forEach(f => {
+    const o = document.createElement('option');
+    o.value = f.id; o.textContent = `${f.name} (${f.id})`; sel.appendChild(o);
+  });
+}
+
+function fillHarvestTrace() {
+  const fId = document.getElementById('harv-farmer').value;
+  const f = DB.farmers.find(x => x.id === fId);
+  document.getElementById('harv-trace').value = f ? f.traceCode : '';
+}
+
+// ── UPDATE FARMER TRACE PREVIEW ──────────────────────────────
+document.addEventListener('change', e => {
+  if (e.target.id === 'farm-village' || e.target.id === 'farm-name') {
+    const villId = document.getElementById('farm-village').value;
+    const frmId  = document.getElementById('farm-id').value;
+    if (villId && frmId) {
+      document.getElementById('farm-trace').value = makeTrace(villId, frmId);
+    }
+  }
+});
+
+// ── SAVE VILLAGE ─────────────────────────────────────────────
+async function saveVillage() {
+  const name      = v('vill-name');
+  const mandal    = v('vill-mandal');
+  const district  = v('vill-district');
+  const state     = v('vill-state');
+  const coordName = v('vill-coord-name');
+  const coordPhone= v('vill-coord-phone');
+  if (!name||!mandal||!district||!state||!coordName||!coordPhone) return showToast('⚠️ Fill all required fields','warn');
+
+  const id = document.getElementById('vill-id').value;
+  const record = { id, name, mandal, district, state, gps:v('vill-gps'), coordName, coordPhone, remarks:v('vill-remarks') };
+
+  disableBtn('btn-save-village', true);
+  showLoader('Saving village to Google Sheets…');
+  const res = await apiPost({ action:'save', store:'villages', record });
+  hideLoader(); disableBtn('btn-save-village', false);
+
+  if (res.success) {
+    DB.villages.push(record);
+    showToast('✅ Village saved: ' + name);
+    resetVillageForm(); refreshAllViews();
+  } else { showToast('❌ Save failed: ' + res.error, 'err'); }
+}
+
+function resetVillageForm() {
+  ['vill-name','vill-mandal','vill-district','vill-gps','vill-coord-name','vill-coord-phone','vill-remarks'].forEach(clearField);
+  document.getElementById('vill-state').value = '';
+  genIds();
+}
+
+// ── SAVE FARMER ──────────────────────────────────────────────
+async function saveFarmer() {
+  const name      = v('farm-name');
+  const villId    = v('farm-village');
+  const father    = v('farm-father');
+  const mobile    = v('farm-mobile');
+  const totalLand = v('farm-total-land');
+  const turmLand  = v('farm-turmeric-land');
+  if (!name||!villId||!father||!mobile||!totalLand||!turmLand) return showToast('⚠️ Fill all required fields','warn');
+
+  const id         = document.getElementById('farm-id').value;
+  const village    = DB.villages.find(v2 => v2.id === villId);
+  const traceCode  = makeTrace(villId, id);
+  const record = { id, villageId:villId, villageName:village?village.name:'', name, gender:v('farm-gender'), father, mobile, aadhar:v('farm-aadhar'), address:v('farm-address'), fpo:v('farm-fpo'), totalLand, turmericLand:turmLand, soilType:v('farm-soil'), farmType:v('farm-type'), traceCode };
+
+  showLoader('Registering farmer…');
+  const res = await apiPost({ action:'save', store:'farmers', record });
+  hideLoader();
+
+  if (res.success) {
+    DB.farmers.push(record);
+    showToast('✅ Farmer registered: ' + name);
+    resetFarmerForm(); refreshAllViews();
+  } else { showToast('❌ ' + res.error, 'err'); }
+}
+
+function resetFarmerForm() {
+  ['farm-name','farm-father','farm-mobile','farm-aadhar','farm-address','farm-total-land','farm-turmeric-land','farm-trace'].forEach(clearField);
+  ['farm-village','farm-gender','farm-soil'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('farm-fpo').value = 'No';
+  document.getElementById('farm-type').value = 'Conventional';
+  genIds();
+}
+
+// ── SAVE DISTRIBUTION ────────────────────────────────────────
+async function saveDistribution() {
+  const date    = v('dist-date');
+  const villId  = v('dist-village');
+  const farmId  = v('dist-farmer');
+  const variety = v('dist-variety');
+  const batch   = v('dist-batch');
+  const qty     = v('dist-qty');
+  const officer = v('dist-officer');
+  if (!date||!villId||!farmId||!variety||!batch||!qty||!officer) return showToast('⚠️ Fill all required fields','warn');
+
+  const id     = document.getElementById('dist-id').value;
+  const farmer = DB.farmers.find(f => f.id === farmId);
+  const village= DB.villages.find(vv => vv.id === villId);
+  const record = { id, date, villageId:villId, villageName:village?village.name:'', farmerId:farmId, farmerName:farmer?farmer.name:'', variety, batch, qty, expectedYield:v('dist-yield'), source:v('dist-source'), officer };
+
+  showLoader('Recording distribution…');
+  const res = await apiPost({ action:'save', store:'distributions', record });
+  hideLoader();
+
+  if (res.success) {
+    DB.distributions.push(record);
+    showToast('✅ Distribution recorded');
+    resetDistForm(); refreshAllViews();
+  } else { showToast('❌ ' + res.error, 'err'); }
+}
+
+function resetDistForm() {
+  ['dist-batch','dist-qty','dist-yield','dist-officer'].forEach(clearField);
+  ['dist-village','dist-farmer','dist-variety'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('dist-source').value = 'MTAG Nursery';
+  document.getElementById('dist-date').value = new Date().toISOString().split('T')[0];
+  genIds();
+}
+
+// ── SAVE CULTIVATION ─────────────────────────────────────────
+async function saveCultivation() {
+  const villId    = v('cult-village');
+  const farmId    = v('cult-farmer');
+  const batch     = v('cult-batch');
+  const plantDate = v('cult-plant-date');
+  if (!villId||!farmId||!batch||!plantDate) return showToast('⚠️ Fill required fields','warn');
+
+  const farmer  = DB.farmers.find(f => f.id === farmId);
+  const village = DB.villages.find(vv => vv.id === villId);
+  const cultId  = 'CULT-' + Date.now();
+  const record  = { cultId, villageId:villId, villageName:village?village.name:'', farmerId:farmId, farmerName:farmer?farmer.name:'', batch, fieldLocation:v('cult-field'), plantDate, harvestDate:v('cult-harvest-date'), inspectDate:v('cult-inspect-date'), officer:v('cult-officer'), status:v('cult-status'), notes:v('cult-notes') };
+
+  showLoader('Saving cultivation record…');
+  const res = await apiPost({ action:'save', store:'cultivation', record });
+  hideLoader();
+
+  if (res.success) {
+    DB.cultivation.push(record);
+    showToast('✅ Cultivation record saved');
+    resetCultForm(); refreshAllViews();
+  } else { showToast('❌ ' + res.error, 'err'); }
+}
+
+function resetCultForm() {
+  ['cult-batch','cult-field','cult-plant-date','cult-harvest-date','cult-inspect-date','cult-officer','cult-notes'].forEach(clearField);
+  ['cult-village','cult-farmer'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cult-status').value = 'Healthy';
+  document.getElementById('cult-inspect-date').value = new Date().toISOString().split('T')[0];
+}
+
+// ── SAVE HARVEST ─────────────────────────────────────────────
+async function saveHarvest() {
+  const villId  = v('harv-village');
+  const farmId  = v('harv-farmer');
+  const date    = v('harv-date');
+  const green   = v('harv-green');
+  if (!villId||!farmId||!date||!green) return showToast('⚠️ Fill required fields','warn');
+
+  const farmer  = DB.farmers.find(f => f.id === farmId);
+  const village = DB.villages.find(vv => vv.id === villId);
+  const lotId   = document.getElementById('harv-lot-id').value;
+  const record  = { lotId, villageId:villId, villageName:village?village.name:'', farmerId:farmId, farmerName:farmer?farmer.name:'', date, green, procure:v('harv-procure'), price:v('harv-price'), traceCode:farmer?farmer.traceCode:'' };
+
+  showLoader('Saving harvest record…');
+  const res = await apiPost({ action:'save', store:'harvest', record });
+  hideLoader();
+
+  if (res.success) {
+    DB.harvest.push(record);
+    showToast('✅ Harvest record saved');
+    resetHarvestForm(); refreshAllViews();
+  } else { showToast('❌ ' + res.error, 'err'); }
+}
+
+function resetHarvestForm() {
+  ['harv-green','harv-procure','harv-price','harv-trace'].forEach(clearField);
+  ['harv-village','harv-farmer'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('harv-date').value = new Date().toISOString().split('T')[0];
+  genIds();
+}
+
+// ── DELETE ───────────────────────────────────────────────────
+async function deleteRecord(store, id) {
+  if (!confirm('Delete this record from Google Sheets? Cannot be undone.')) return;
+  showLoader('Deleting…');
+  const res = await apiPost({ action:'delete', store, id });
+  hideLoader();
+  if (res.success) {
+    DB[store] = DB[store].filter(r => (r.id||r.lotId||r.cultId) !== id);
+    showToast('🗑 Deleted'); refreshAllViews();
+  } else { showToast('❌ ' + res.error, 'err'); }
+}
+
+// ── RENDER TABLES ────────────────────────────────────────────
+function renderVillageTable() {
+  const q = (document.getElementById('vill-search')||{}).value||'';
+  const rows = DB.villages.filter(r => matches(r, q, ['name','mandal','district']));
+  const tb = document.getElementById('vill-tbody');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="9" class="empty-cell">No villages registered yet</td></tr>`; return; }
+  tb.innerHTML = rows.map((r,i) => `<tr>
+    <td><span class="badge bg-brown">${r.id}</span></td>
+    <td><strong>${r.name}</strong></td>
+    <td>${r.mandal}</td><td>${r.district}</td><td>${r.state}</td>
+    <td>${r.coordName}</td><td>${r.coordPhone}</td>
+    <td>${DB.farmers.filter(f=>f.villageId===r.id).length}</td>
+    <td>
+      <button class="btn btn-outline btn-sm" onclick="viewModal('villages',${i})">👁</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteRecord('villages','${r.id}')">🗑</button>
+    </td>
+  </tr>`).join('');
+}
+
+function renderFarmerTable() {
+  const q  = (document.getElementById('farm-search')||{}).value||'';
+  const fv = (document.getElementById('farm-filter-vill')||{}).value||'';
+  const rows = DB.farmers.filter(r => (!fv||r.villageId===fv) && matches(r,q,['name','id','mobile']));
+  const tb = document.getElementById('farm-tbody');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="10" class="empty-cell">No farmers registered yet</td></tr>`; return; }
+  tb.innerHTML = rows.map((r,i) => `<tr>
+    <td><span class="badge bg-yellow">${r.id}</span></td>
+    <td>${r.villageName}</td><td><strong>${r.name}</strong></td>
+    <td>${r.mobile}</td><td>${r.totalLand}</td><td>${r.turmericLand}</td>
+    <td>${r.fpo==='Yes'?'<span class="badge bg-green">FPO</span>':'No'}</td>
+    <td>${r.farmType}</td>
+    <td><span class="trace-chip">${r.traceCode}</span></td>
+    <td>
+      <button class="btn btn-outline btn-sm" onclick="viewModal('farmers',${i})">👁</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteRecord('farmers','${r.id}')">🗑</button>
+    </td>
+  </tr>`).join('');
+}
+
+function renderDistTable() {
+  const q  = (document.getElementById('dist-search')||{}).value||'';
+  const fv = (document.getElementById('dist-filter-vill')||{}).value||'';
+  const fb = (document.getElementById('dist-filter-batch')||{}).value||'';
+  const rows = DB.distributions.filter(r => (!fv||r.villageId===fv) && (!fb||r.batch.toLowerCase().includes(fb.toLowerCase())) && matches(r,q,['farmerName','batch']));
+  const tb = document.getElementById('dist-tbody');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="10" class="empty-cell">No distribution records yet</td></tr>`; return; }
+  tb.innerHTML = rows.map(r => `<tr>
+    <td><span class="badge bg-brown">${r.id}</span></td>
+    <td>${r.date}</td><td>${r.villageName}</td><td>${r.farmerName}</td>
+    <td>${r.variety}</td><td><span class="trace-chip">${r.batch}</span></td>
+    <td><strong>${r.qty}</strong></td><td>${r.source}</td><td>${r.officer}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="deleteRecord('distributions','${r.id}')">🗑</button></td>
+  </tr>`).join('');
+}
+
+function renderCultTable() {
+  const q  = (document.getElementById('cult-search')||{}).value||'';
+  const fv = (document.getElementById('cult-filter-vill')||{}).value||'';
+  const fs = (document.getElementById('cult-filter-status')||{}).value||'';
+  const rows = DB.cultivation.filter(r => (!fv||r.villageId===fv) && (!fs||r.status===fs) && matches(r,q,['farmerName','batch']));
+  const tb = document.getElementById('cult-tbody');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="9" class="empty-cell">No cultivation records yet</td></tr>`; return; }
+  tb.innerHTML = rows.map(r => {
+    const bc = r.status==='Healthy'?'bg-green':r.status==='Moderate'?'bg-yellow':'bg-red';
+    return `<tr>
+      <td>${r.villageName}</td><td>${r.farmerName}</td>
+      <td><span class="trace-chip">${r.batch}</span></td>
+      <td>${r.plantDate}</td><td>${r.harvestDate||'—'}</td>
+      <td>${r.inspectDate||'—'}</td><td>${r.officer||'—'}</td>
+      <td><span class="badge ${bc}">${r.status}</span></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteRecord('cultivation','${r.cultId}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderHarvestTable() {
+  const q  = (document.getElementById('harv-search')||{}).value||'';
+  const fv = (document.getElementById('harv-filter-vill')||{}).value||'';
+  const fd = (document.getElementById('harv-filter-date')||{}).value||'';
+  const rows = DB.harvest.filter(r => (!fv||r.villageId===fv) && (!fd||r.date===fd) && matches(r,q,['farmerName','lotId']));
+  const tb = document.getElementById('harv-tbody');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="9" class="empty-cell">No harvest records yet</td></tr>`; return; }
+  tb.innerHTML = rows.map(r => `<tr>
+    <td><span class="badge bg-brown">${r.lotId}</span></td>
+    <td>${r.villageName}</td><td>${r.farmerName}</td><td>${r.date}</td>
+    <td><strong>${r.green}</strong></td><td>${r.procure||'—'}</td>
+    <td>${r.price?'₹'+r.price:'—'}</td>
+    <td><span class="trace-chip">${r.traceCode}</span></td>
+    <td><button class="btn btn-danger btn-sm" onclick="deleteRecord('harvest','${r.lotId}')">🗑</button></td>
+  </tr>`).join('');
+}
+
+function renderTraceTable() {
+  const fv = (document.getElementById('trace-filter-vill')||{}).value||'';
+  const rows = DB.harvest.filter(r => !fv||r.villageId===fv);
+  const tb = document.getElementById('trace-tbody');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="7" class="empty-cell">No records</td></tr>`; return; }
+  tb.innerHTML = rows.map(r => {
+    const dist = DB.distributions.find(d => d.farmerId===r.farmerId);
+    return `<tr>
+      <td><span class="trace-chip">${r.traceCode}</span></td>
+      <td>${r.villageName}</td><td>${r.farmerName}</td>
+      <td>${dist?dist.batch:'—'}</td>
+      <td>${r.lotId}</td><td>${r.green}</td><td>${r.procure||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────
+function updateDashboard() {
+  set('s-villages', DB.villages.length);
+  set('s-farmers',  DB.farmers.length);
+  set('s-area',     DB.farmers.reduce((s,f)=>s+parseFloat(f.turmericLand||0),0).toFixed(1));
+  set('s-seed',     DB.distributions.reduce((s,d)=>s+parseFloat(d.qty||0),0).toFixed(0));
+  set('s-harv',     DB.harvest.reduce((s,h)=>s+parseFloat(h.green||0),0).toFixed(0));
+  const tb = document.getElementById('dash-dist-body');
+  const recent = [...DB.distributions].reverse().slice(0,8);
+  if (!recent.length) { tb.innerHTML = `<tr><td colspan="6" class="empty-cell">No distributions yet</td></tr>`; return; }
+  tb.innerHTML = recent.map(d=>`<tr><td>${d.date}</td><td>${d.villageName}</td><td>${d.farmerName}</td><td>${d.variety}</td><td>${d.qty}</td><td><span class="trace-chip">${d.batch}</span></td></tr>`).join('');
+}
+
+// ── SEARCH TRACE ─────────────────────────────────────────────
+function searchTrace() {
+  const q = document.getElementById('trace-q').value.trim().toLowerCase();
+  const out = document.getElementById('trace-result');
+  if (!q) return;
+  const farmer = DB.farmers.find(f => f.traceCode.toLowerCase().includes(q) || f.name.toLowerCase().includes(q) || f.id.toLowerCase().includes(q));
+  if (!farmer) { out.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-muted)">❌ No record found for "<strong>${q}</strong>"</div>`; return; }
+  const village = DB.villages.find(vv => vv.id === farmer.villageId);
+  const dists   = DB.distributions.filter(d => d.farmerId===farmer.id);
+  const cult    = DB.cultivation.filter(c => c.farmerId===farmer.id);
+  const harv    = DB.harvest.filter(h => h.farmerId===farmer.id);
+  out.innerHTML = `
+    <div class="trace-banner"><div class="t-label">Traceability Code</div><div class="t-val">${farmer.traceCode}</div></div>
+    <div class="form-grid" style="margin:12px 0">
+      <div class="form-group"><label>Farmer</label><input readonly value="${farmer.name}"></div>
+      <div class="form-group"><label>Village</label><input readonly value="${farmer.villageName}"></div>
+      <div class="form-group"><label>District</label><input readonly value="${village?village.district:'—'}"></div>
+      <div class="form-group"><label>Turmeric Area (Ac)</label><input readonly value="${farmer.turmericLand}"></div>
+      <div class="form-group"><label>Farm Type</label><input readonly value="${farmer.farmType}"></div>
+      <div class="form-group"><label>FPO Member</label><input readonly value="${farmer.fpo}"></div>
+    </div>
+    <p style="font-weight:700;color:var(--brown);margin:10px 0 6px">🌱 Seed Distributions (${dists.length})</p>
+    ${dists.length?dists.map(d=>`<div style="background:var(--turmeric-pale);border-radius:8px;padding:9px 14px;margin-bottom:6px;font-size:.83rem">Batch: <strong>${d.batch}</strong> | Variety: ${d.variety} | Qty: ${d.qty} Kg | Date: ${d.date} | Officer: ${d.officer}</div>`).join(''):'<p style="color:var(--text-muted);font-size:.84rem;margin-bottom:10px">No distributions</p>'}
+    <p style="font-weight:700;color:var(--brown);margin:10px 0 6px">🌾 Cultivation Records (${cult.length})</p>
+    ${cult.length?cult.map(c=>`<div style="background:var(--green-pale);border-radius:8px;padding:9px 14px;margin-bottom:6px;font-size:.83rem">Planted: ${c.plantDate} | Status: <strong>${c.status}</strong> | Inspector: ${c.officer||'—'} | Inspection: ${c.inspectDate||'—'}</div>`).join(''):'<p style="color:var(--text-muted);font-size:.84rem;margin-bottom:10px">No cultivation records</p>'}
+    <p style="font-weight:700;color:var(--brown);margin:10px 0 6px">🧺 Harvest Records (${harv.length})</p>
+    ${harv.length?harv.map(h=>`<div style="background:var(--brown-pale);border-radius:8px;padding:9px 14px;margin-bottom:6px;font-size:.83rem">Lot: <strong>${h.lotId}</strong> | Date: ${h.date} | Produced: ${h.green} Kg | Procured: ${h.procure||'—'} Kg | Price: ${h.price?'₹'+h.price+'/Kg':'—'}</div>`).join(''):'<p style="color:var(--text-muted);font-size:.84rem">No harvest records</p>'}
+  `;
+}
+
+// ── EXPORT ───────────────────────────────────────────────────
+const EXPORT_MAP = {
+  villages:      { data:()=>DB.villages,      cols:['id','name','mandal','district','state','gps','coordName','coordPhone','remarks'],                                  heads:['Village ID','Name','Mandal','District','State','GPS','Coordinator','Phone','Remarks'] },
+  farmers:       { data:()=>DB.farmers,       cols:['id','villageName','name','gender','father','mobile','aadhar','fpo','totalLand','turmericLand','soilType','farmType','traceCode'], heads:['Farmer ID','Village','Name','Gender','Father','Mobile','Aadhar','FPO','Total Land','Turmeric Land','Soil','Type','Trace Code'] },
+  distributions: { data:()=>DB.distributions, cols:['id','date','villageName','farmerName','variety','batch','qty','expectedYield','source','officer'],                 heads:['Dist ID','Date','Village','Farmer','Variety','Batch','Qty(Kg)','Exp Yield','Source','Officer'] },
+  cultivation:   { data:()=>DB.cultivation,   cols:['villageName','farmerName','batch','plantDate','harvestDate','inspectDate','officer','status','notes'],             heads:['Village','Farmer','Batch','Planted','Exp Harvest','Inspected','Officer','Status','Notes'] },
+  harvest:       { data:()=>DB.harvest,       cols:['lotId','villageName','farmerName','date','green','procure','price','traceCode'],                                   heads:['Lot ID','Village','Farmer','Date','Green(Kg)','Procured(Kg)','Price(₹/Kg)','Trace Code'] },
+  trace:         { data:()=>DB.harvest,       cols:['traceCode','villageName','farmerName','lotId','green','procure'],                                                  heads:['Trace Code','Village','Farmer','Lot ID','Green(Kg)','Procured(Kg)'] }
+};
+
+function exportExcel(type) {
+  const cfg  = EXPORT_MAP[type]; const data = cfg.data();
+  if (!data.length) return showToast('⚠️ No data','warn');
+  const ws   = XLSX.utils.aoa_to_sheet([cfg.heads, ...data.map(r=>cfg.cols.map(c=>r[c]||''))]);
+  ws['!cols']= cfg.heads.map(()=>({wch:18}));
+  const wb   = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, type);
+  XLSX.writeFile(wb, `MTAG_${type}_${date()}.xlsx`);
+  showToast('📊 Excel downloaded');
+}
+
+function exportCSV(type) {
+  const cfg = EXPORT_MAP[type]; const data = cfg.data();
+  if (!data.length) return showToast('⚠️ No data','warn');
+  const csv = [cfg.heads.join(','), ...data.map(r=>cfg.cols.map(c=>`"${(r[c]||'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');
+  dl(new Blob([csv],{type:'text/csv'}), `MTAG_${type}_${date()}.csv`);
+  showToast('📁 CSV downloaded');
+}
+
+function exportPDF(type) {
+  const cfg = EXPORT_MAP[type]; const data = cfg.data();
+  if (!data.length) return showToast('⚠️ No data','warn');
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  doc.setFillColor(107,63,26); doc.rect(0,0,297,18,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text(`MTAG Industries — ${type} Report`, 10, 12);
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')} | Confidential`, 200, 12);
+  const cw = Math.floor(270/cfg.heads.length); let y = 26;
+  doc.setFillColor(232,160,32); doc.rect(10,y-5,277,8,'F');
+  doc.setTextColor(107,63,26); doc.setFont('helvetica','bold'); doc.setFontSize(7);
+  cfg.heads.forEach((h,i)=>doc.text(String(h).substring(0,15),12+i*cw,y));
+  y+=8; doc.setFont('helvetica','normal'); doc.setTextColor(44,24,16);
+  data.forEach((r,ri)=>{
+    if(y>190){doc.addPage();y=20}
+    if(ri%2===0){doc.setFillColor(253,243,220);doc.rect(10,y-4,277,7,'F')}
+    cfg.cols.forEach((c,i)=>doc.text(String(r[c]||'').substring(0,16),12+i*cw,y));
+    y+=8;
+  });
+  doc.save(`MTAG_${type}_${date()}.pdf`);
+  showToast('📄 PDF downloaded');
+}
+
+function exportAllCSV() {
+  Object.keys(EXPORT_MAP).forEach(t => exportCSV(t));
+  showToast('📤 All CSVs ready — import to Google Sheets');
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function viewModal(store, idx) {
+  const rec = DB[store][idx];
+  document.getElementById('modal-title').textContent = store === 'farmers' ? `Farmer: ${rec.name}` : `Village: ${rec.name}`;
+  document.getElementById('modal-body').innerHTML = Object.entries(rec).map(([k,val])=>
+    `<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.84rem">
+      <strong style="min-width:160px;color:var(--brown);text-transform:capitalize">${k.replace(/([A-Z])/g,' $1').trim()}:</strong>
+      <span>${val||'—'}</span>
+    </div>`
+  ).join('');
+  document.getElementById('view-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('view-modal').classList.remove('open'); }
+
+// ── NAVIGATION ───────────────────────────────────────────────
+function showSection(id, el) {
+  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  closeSidebarMobile();
+  genIds(); populateVillageDropdowns();
+  if(id==='dashboard') updateDashboard();
+  if(id==='traceability') renderTraceTable();
+}
+
+function switchTab(prefix, tab, el) {
+  const add  = document.getElementById(`${prefix}-add`);
+  const list = document.getElementById(`${prefix}-list`);
+  el.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  if (tab==='add')  { add&&(add.style.display='');  list&&(list.style.display='none'); }
+  else              { add&&(add.style.display='none'); list&&(list.style.display=''); }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebarMobile() {
+  if(window.innerWidth<=768){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('open'); }
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function v(id) { return (document.getElementById(id)||{}).value||''; }
+function set(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
+function clearField(id) { const el=document.getElementById(id); if(el) el.value=''; }
+function disableBtn(id, state) { const el=document.getElementById(id); if(el) el.disabled=state; }
+function matches(r, q, keys) { if(!q) return true; const ql=q.toLowerCase(); return keys.some(k=>(r[k]||'').toLowerCase().includes(ql)); }
+function date() { return new Date().toISOString().split('T')[0]; }
+function timeNow() { return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+function setSyncStatus(msg) { const el=document.getElementById('sync-status'); if(el) el.textContent=msg; }
+function dl(blob, name) { const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); }
+
+function showLoader(msg) {
+  document.getElementById('loader-msg').textContent = msg||'Loading…';
+  document.getElementById('loader-overlay').classList.add('open');
+}
+function hideLoader() { document.getElementById('loader-overlay').classList.remove('open'); }
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type==='err'?'var(--danger)':type==='warn'?'var(--turmeric-dark)':'var(--green)';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
