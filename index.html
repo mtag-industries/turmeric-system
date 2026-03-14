@@ -178,6 +178,28 @@ tr:hover td{background:rgba(232,160,32,.04)}
   .form-grid{grid-template-columns:1fr}
   .header-right .sync-status{display:none}
 }
+
+/* ── SEARCHABLE DROPDOWN ── */
+.sd-wrap{position:relative;width:100%}
+.sd-display{border:1.5px solid var(--border);border-radius:8px;padding:9px 34px 9px 12px;font-size:.87rem;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:38px;transition:border-color .2s,box-shadow .2s;user-select:none}
+.sd-display:hover{border-color:var(--turmeric)}
+.sd-display.open{border-color:var(--turmeric);box-shadow:0 0 0 3px rgba(232,160,32,.15);border-bottom-color:transparent;border-radius:8px 8px 0 0}
+.sd-display .sd-val{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sd-display .sd-val.placeholder{color:#aaa}
+.sd-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--text-muted);pointer-events:none;transition:transform .2s}
+.sd-display.open .sd-arrow{transform:translateY(-50%) rotate(180deg)}
+.sd-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--turmeric);border-top:none;border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(107,63,26,.15);z-index:200;max-height:260px;overflow:hidden;flex-direction:column}
+.sd-dropdown.open{display:flex}
+.sd-search-wrap{padding:8px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0}
+.sd-search{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:7px 10px;font-size:.83rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.sd-search:focus{border-color:var(--turmeric)}
+.sd-list{overflow-y:auto;max-height:200px}
+.sd-opt{padding:9px 13px;font-size:.84rem;cursor:pointer;border-bottom:1px solid rgba(232,213,183,.3);transition:background .15s;display:flex;align-items:center;gap:8px}
+.sd-opt:hover,.sd-opt.focused{background:var(--turmeric-pale);color:var(--turmeric-dark)}
+.sd-opt.selected{background:var(--turmeric-pale);font-weight:600;color:var(--turmeric-dark)}
+.sd-opt.no-match{color:var(--text-muted);font-style:italic;cursor:default;padding:14px 13px;text-align:center}
+.sd-opt:last-child{border-bottom:none}
+.sd-hidden{display:none!important}
 </style>
 </head>
 <body>
@@ -343,7 +365,7 @@ tr:hover td{background:rgba(232,160,32,.04)}
     <div class="card-header"><div class="card-title">New Farmer Registration</div></div>
     <div class="form-grid">
       <div class="form-group"><label>Farmer ID</label><input class="auto-id" id="farm-id" readonly></div>
-      <div class="form-group"><label>Village *</label><select id="farm-village"><option value="">— Select Village —</option></select></div>
+      <div class="form-group"><label>Village *</label><div class="sd-wrap" id="sdw-farm-village"><input type="hidden" id="farm-village" value=""><div class="sd-display" id="sdd-farm-village" onclick="sdToggle('farm-village')" tabindex="0"><span class="sd-val placeholder" id="sdv-farm-village">— Select Village —</span><span class="sd-arrow">▼</span></div><div class="sd-dropdown" id="sddr-farm-village"><div class="sd-search-wrap"><input class="sd-search" id="sds-farm-village" placeholder="🔍 Type to search…" oninput="sdFilter('farm-village')" onkeydown="sdKey(event,'farm-village')" autocomplete="off"></div><div class="sd-list" id="sdl-farm-village"></div></div></div></div>
       <div class="form-group"><label>Farmer Name *</label><input id="farm-name" placeholder="Full name"></div>
       <div class="form-group"><label>Gender</label><select id="farm-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
       <div class="form-group"><label>Father / Husband Name *</label><input id="farm-father" placeholder="Father / Husband"></div>
@@ -394,10 +416,10 @@ tr:hover td{background:rgba(232,160,32,.04)}
     <div class="form-grid">
       <div class="form-group"><label>Distribution ID</label><input class="auto-id" id="dist-id" readonly></div>
       <div class="form-group"><label>Date *</label><input id="dist-date" type="date"></div>
-      <div class="form-group"><label>Village *</label><select id="dist-village" onchange="loadFarmerDrop('dist-farmer','dist-village')"><option value="">— Select Village —</option></select></div>
-      <div class="form-group"><label>Farmer *</label><select id="dist-farmer"><option value="">— Select Farmer —</option></select></div>
+      <div class="form-group"><label>Village *</label><div class="sd-wrap" id="sdw-dist-village"><input type="hidden" id="dist-village" value=""><div class="sd-display" id="sdd-dist-village" onclick="sdToggle('dist-village')" tabindex="0"><span class="sd-val placeholder" id="sdv-dist-village">— Select Village —</span><span class="sd-arrow">▼</span></div><div class="sd-dropdown" id="sddr-dist-village"><div class="sd-search-wrap"><input class="sd-search" id="sds-dist-village" placeholder="🔍 Type to search…" oninput="sdFilter('dist-village')" onkeydown="sdKey(event,'dist-village')" autocomplete="off"></div><div class="sd-list" id="sdl-dist-village"></div></div></div></div>
+      <div class="form-group"><label>Farmer *</label><div class="sd-wrap" id="sdw-dist-farmer"><input type="hidden" id="dist-farmer" value=""><div class="sd-display" id="sdd-dist-farmer" onclick="sdToggle('dist-farmer')" tabindex="0"><span class="sd-val placeholder" id="sdv-dist-farmer">— Select Farmer —</span><span class="sd-arrow">▼</span></div><div class="sd-dropdown" id="sddr-dist-farmer"><div class="sd-search-wrap"><input class="sd-search" id="sds-dist-farmer" placeholder="🔍 Type to search…" oninput="sdFilter('dist-farmer')" onkeydown="sdKey(event,'dist-farmer')" autocomplete="off"></div><div class="sd-list" id="sdl-dist-farmer"></div></div></div></div>
       <div class="form-group"><label>Turmeric Variety *</label>
-        <select id="dist-variety"><option value="">Select</option><option>Lakadong</option><option>Rajapuri</option><option>Salem Local</option><option>Alleppey Finger</option><option>Cuddapah</option><option>IISR Pragati</option><option>IISR Alleppey Supreme</option><option>CO-1</option><option>Other</option></select>
+        <select id="dist-variety"><option value="">Select</option><option>Lakadong</option><option>Rajapuri</option><option>Salem Local</option><option>Alleppey Finger</option><option>Cuddapah</option><option>IISR Pragati</option><option>IISR Alleppey Supreme</option><option>CO-1</option><option>PRATHIBA</option><option>Other</option></select>
       </div>
       <div class="form-group"><label>Seed Batch No. *</label><input id="dist-batch" placeholder="e.g. BATCH-2026-001"></div>
       <div class="form-group"><label>Quantity (Kg) *</label><input id="dist-qty" type="number" step="0.5" placeholder="0"></div>
@@ -442,9 +464,9 @@ tr:hover td{background:rgba(232,160,32,.04)}
   <div id="cult-add" class="card">
     <div class="card-header"><div class="card-title">Cultivation & Inspection Record</div></div>
     <div class="form-grid">
-      <div class="form-group"><label>Village *</label><select id="cult-village" onchange="loadFarmerDrop('cult-farmer','cult-village')"><option value="">— Select Village —</option></select></div>
-      <div class="form-group"><label>Farmer *</label><select id="cult-farmer"><option value="">— Select Farmer —</option></select></div>
-      <div class="form-group"><label>Seed Batch No. *</label><input id="cult-batch" placeholder="Batch number"></div>
+      <div class="form-group"><label>Village *</label><div class="sd-wrap" id="sdw-cult-village"><input type="hidden" id="cult-village" value=""><div class="sd-display" id="sdd-cult-village" onclick="sdToggle('cult-village')" tabindex="0"><span class="sd-val placeholder" id="sdv-cult-village">— Select Village —</span><span class="sd-arrow">▼</span></div><div class="sd-dropdown" id="sddr-cult-village"><div class="sd-search-wrap"><input class="sd-search" id="sds-cult-village" placeholder="🔍 Type to search…" oninput="sdFilter('cult-village')" onkeydown="sdKey(event,'cult-village')" autocomplete="off"></div><div class="sd-list" id="sdl-cult-village"></div></div></div></div>
+      <div class="form-group"><label>Farmer *</label><div class="sd-wrap" id="sdw-cult-farmer"><input type="hidden" id="cult-farmer" value=""><div class="sd-display" id="sdd-cult-farmer" onclick="sdToggle('cult-farmer')" tabindex="0"><span class="sd-val placeholder" id="sdv-cult-farmer">— Select Farmer —</span><span class="sd-arrow">▼</span></div><div class="sd-dropdown" id="sddr-cult-farmer"><div class="sd-search-wrap"><input class="sd-search" id="sds-cult-farmer" placeholder="🔍 Type to search…" oninput="sdFilter('cult-farmer')" onkeydown="sdKey(event,'cult-farmer')" autocomplete="off"></div><div class="sd-list" id="sdl-cult-farmer"></div></div></div></div>
+      <div class="form-group"><label>Seed Batch No. * <span style="font-size:.68rem;color:var(--green);font-weight:600;text-transform:none;letter-spacing:0">(auto-filled from distribution)</span></label><input id="cult-batch" placeholder="Auto-filled — or type manually" style="background:var(--green-pale)"></div>
       <div class="form-group"><label>Field Location</label><input id="cult-field" placeholder="Survey No. / GPS"></div>
       <div class="form-group"><label>Date of Planting *</label><input id="cult-plant-date" type="date"></div>
       <div class="form-group"><label>Expected Harvest Date</label><input id="cult-harvest-date" type="date"></div>
@@ -492,8 +514,8 @@ tr:hover td{background:rgba(232,160,32,.04)}
     <div class="card-header"><div class="card-title">Harvest & Procurement Entry</div></div>
     <div class="form-grid">
       <div class="form-group"><label>Lot ID</label><input class="auto-id" id="harv-lot-id" readonly></div>
-      <div class="form-group"><label>Village *</label><select id="harv-village" onchange="loadFarmerDrop('harv-farmer','harv-village')"><option value="">— Select Village —</option></select></div>
-      <div class="form-group"><label>Farmer *</label><select id="harv-farmer" onchange="fillHarvestTrace()"><option value="">— Select Farmer —</option></select></div>
+      <div class="form-group"><label>Village *</label><div class="sd-wrap" id="sdw-harv-village"><input type="hidden" id="harv-village" value=""><div class="sd-display" id="sdd-harv-village" onclick="sdToggle('harv-village')" tabindex="0"><span class="sd-val placeholder" id="sdv-harv-village">— Select Village —</span><span class="sd-arrow">▼</span></div><div class="sd-dropdown" id="sddr-harv-village"><div class="sd-search-wrap"><input class="sd-search" id="sds-harv-village" placeholder="🔍 Type to search…" oninput="sdFilter('harv-village')" onkeydown="sdKey(event,'harv-village')" autocomplete="off"></div><div class="sd-list" id="sdl-harv-village"></div></div></div></div>
+      <div class="form-group"><label>Farmer *</label><div class="sd-wrap" id="sdw-harv-farmer"><input type="hidden" id="harv-farmer" value=""><div class="sd-display" id="sdd-harv-farmer" onclick="sdToggle('harv-farmer')" tabindex="0"><span class="sd-val placeholder" id="sdv-harv-farmer">— Select Farmer —</span><span class="sd-arrow">▼</span></div><div class="sd-dropdown" id="sddr-harv-farmer"><div class="sd-search-wrap"><input class="sd-search" id="sds-harv-farmer" placeholder="🔍 Type to search…" oninput="sdFilter('harv-farmer')" onkeydown="sdKey(event,'harv-farmer')" autocomplete="off"></div><div class="sd-list" id="sdl-harv-farmer"></div></div></div></div>
       <div class="form-group"><label>Harvest Date *</label><input id="harv-date" type="date"></div>
       <div class="form-group"><label>Green Turmeric (Kg) *</label><input id="harv-green" type="number" step="0.5" placeholder="0"></div>
       <div class="form-group"><label>MTAG Procured (Kg)</label><input id="harv-procure" type="number" step="0.5" placeholder="0"></div>
@@ -700,14 +722,15 @@ function makeTrace(villId, farmId) {
 
 // ── DROPDOWN HELPERS ─────────────────────────────────────────
 function populateVillageDropdowns() {
-  const selectors = ['farm-village','dist-village','cult-village','harv-village',
-                     'dist-filter-vill','farm-filter-vill','cult-filter-vill','harv-filter-vill','trace-filter-vill'];
+  // Update searchable village dropdowns (form dropdowns)
+  populateVillageSearchable();
+  // Update regular filter <select> dropdowns only
+  const selectors = ['dist-filter-vill','farm-filter-vill','cult-filter-vill','harv-filter-vill','trace-filter-vill'];
   selectors.forEach(sid => {
     const el = document.getElementById(sid);
     if (!el) return;
     const prev = el.value;
-    const isFilter = sid.includes('filter');
-    el.innerHTML = `<option value="">${isFilter ? 'All Villages' : '— Select Village —'}</option>`;
+    el.innerHTML = '<option value="">All Villages</option>';
     DB.villages.forEach(v => {
       const o = document.createElement('option');
       o.value = v.id; o.textContent = v.name; el.appendChild(o);
@@ -1195,6 +1218,167 @@ function showToast(msg, type) {
   clearTimeout(t._timer);
   t._timer = setTimeout(()=>t.classList.remove('show'), 3000);
 }
+
+// ════════════════════════════════════════════════════════
+//  SEARCHABLE DROPDOWN ENGINE
+// ════════════════════════════════════════════════════════
+const SD_REGISTRY = {};
+
+function sdInit(sid, options, placeholder, onchangeCb) {
+  SD_REGISTRY[sid] = { options: options||[], placeholder: placeholder||'— Select —', onchange: onchangeCb||'' };
+  sdRender(sid, '');
+}
+
+function sdRender(sid, query) {
+  const reg = SD_REGISTRY[sid]; if(!reg) return;
+  const list = document.getElementById('sdl-' + sid); if(!list) return;
+  const q = query.toLowerCase();
+  const filtered = reg.options.filter(o => !q || o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q));
+  list.innerHTML = '';
+  if(!filtered.length) { list.innerHTML = '<div class="sd-opt no-match">No results found</div>'; return; }
+  filtered.forEach(o => {
+    const div = document.createElement('div');
+    div.className = 'sd-opt';
+    div.textContent = o.label;
+    div.dataset.value = o.value;
+    if(document.getElementById(sid).value === o.value) div.classList.add('selected');
+    div.onclick = () => sdSelect(sid, o.value, o.label);
+    list.appendChild(div);
+  });
+}
+
+function sdSelect(sid, value, label) {
+  document.getElementById(sid).value = value;
+  const valEl = document.getElementById('sdv-' + sid);
+  if(valEl) { valEl.textContent = label || SD_REGISTRY[sid]?.placeholder || '— Select —'; valEl.classList.toggle('placeholder', !value); }
+  sdClose(sid);
+  const cb = SD_REGISTRY[sid]?.onchange;
+  if(cb) { try { eval(cb); } catch(e){console.warn('sdSelect cb error',e);} }
+}
+
+function sdToggle(sid) {
+  const dr = document.getElementById('sddr-' + sid);
+  const dd = document.getElementById('sdd-' + sid);
+  if(!dr || !dd) return;
+  const isOpen = dr.classList.contains('open');
+  document.querySelectorAll('.sd-dropdown.open').forEach(el => { const s=el.id.replace('sddr-',''); sdClose(s); });
+  if(!isOpen) {
+    dr.classList.add('open'); dd.classList.add('open');
+    const srch = document.getElementById('sds-' + sid);
+    if(srch) { srch.value=''; sdRender(sid,''); setTimeout(()=>srch.focus(),60); }
+  }
+}
+
+function sdFilter(sid) { sdRender(sid, (document.getElementById('sds-'+sid)||{}).value||''); }
+
+function sdKey(e, sid) {
+  const items = [...document.querySelectorAll(`#sdl-${sid} .sd-opt:not(.no-match)`)];
+  const fi = items.findIndex(x=>x.classList.contains('focused'));
+  if(e.key==='ArrowDown'){e.preventDefault();const n=items[fi+1]||items[0];if(n){items[fi]?.classList.remove('focused');n.classList.add('focused');n.scrollIntoView({block:'nearest'});}}
+  else if(e.key==='ArrowUp'){e.preventDefault();const p=items[fi-1]||items[items.length-1];if(p){items[fi]?.classList.remove('focused');p.classList.add('focused');p.scrollIntoView({block:'nearest'});}}
+  else if(e.key==='Enter'){const f=document.querySelector(`#sdl-${sid} .sd-opt.focused`);if(f)sdSelect(sid,f.dataset.value,f.textContent);}
+  else if(e.key==='Escape'){sdClose(sid);}
+}
+
+function sdClose(sid) {
+  document.getElementById('sddr-'+sid)?.classList.remove('open');
+  document.getElementById('sdd-'+sid)?.classList.remove('open');
+}
+
+function sdReset(sid) {
+  if(!document.getElementById('sdw-'+sid)) return;
+  document.getElementById(sid).value = '';
+  const valEl = document.getElementById('sdv-'+sid);
+  if(valEl){ valEl.textContent = SD_REGISTRY[sid]?.placeholder||'— Select —'; valEl.classList.add('placeholder'); }
+  sdRender(sid,'');
+}
+
+document.addEventListener('click', e => {
+  if(!e.target.closest('.sd-wrap')) document.querySelectorAll('.sd-dropdown.open').forEach(el=>sdClose(el.id.replace('sddr-','')));
+});
+
+// ════════════════════════════════════════════════════════
+//  POPULATE VILLAGE & FARMER SEARCHABLE DROPDOWNS
+// ════════════════════════════════════════════════════════
+const VILLAGE_SD_IDS = ['farm-village','dist-village','cult-village','harv-village'];
+
+function populateVillageSearchable() {
+  const opts = DB.villages.map(v => ({ value: v.id, label: v.name }));
+  VILLAGE_SD_IDS.forEach(sid => {
+    if(document.getElementById('sdw-'+sid)) {
+      const cb = SD_REGISTRY[sid]?.onchange || '';
+      sdInit(sid, opts, '— Select Village —', cb);
+    }
+  });
+}
+
+function populateFarmerSearchable(farmSid, villageId) {
+  const farmers = DB.farmers.filter(f => !villageId || f.villageId === villageId);
+  const opts = farmers.map(f => ({ value: f.id, label: f.name + ' (' + f.id + ')' }));
+  const cb = SD_REGISTRY[farmSid]?.onchange || '';
+  sdInit(farmSid, opts, '— Select Farmer —', cb);
+  sdReset(farmSid);
+}
+
+// ════════════════════════════════════════════════════════
+//  ONCHANGE CALLBACKS FOR EACH SECTION
+// ════════════════════════════════════════════════════════
+function onFarmVillageChange() {
+  const villId = document.getElementById('farm-village').value;
+  const frmId  = document.getElementById('farm-id').value;
+  if(villId && frmId) document.getElementById('farm-trace').value = makeTrace(villId, frmId);
+}
+
+function onDistVillageChange() {
+  populateFarmerSearchable('dist-farmer', document.getElementById('dist-village').value);
+}
+
+function onCultVillageChange() {
+  populateFarmerSearchable('cult-farmer', document.getElementById('cult-village').value);
+  document.getElementById('cult-batch').value = '';
+}
+
+function onCultFarmerChange() {
+  const farmId = document.getElementById('cult-farmer').value;
+  if(!farmId) { document.getElementById('cult-batch').value = ''; return; }
+  const dists = DB.distributions.filter(d => d.farmerId === farmId);
+  if(dists.length) {
+    const latest = dists[dists.length - 1];
+    document.getElementById('cult-batch').value = latest.batch;
+  } else {
+    document.getElementById('cult-batch').value = '';
+  }
+}
+
+function onHarvVillageChange() {
+  populateFarmerSearchable('harv-farmer', document.getElementById('harv-village').value);
+}
+
+function onHarvFarmerChange() {
+  const fId = document.getElementById('harv-farmer').value;
+  const f   = DB.farmers.find(x => x.id === fId);
+  document.getElementById('harv-trace').value = f ? f.traceCode : '';
+}
+
+// ════════════════════════════════════════════════════════
+//  REGISTER ONCHANGE CALLBACKS ON DOM READY
+// ════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  SD_REGISTRY['farm-village'] = SD_REGISTRY['farm-village'] || {};
+  SD_REGISTRY['farm-village'].onchange = 'onFarmVillageChange()';
+  SD_REGISTRY['dist-village'] = SD_REGISTRY['dist-village'] || {};
+  SD_REGISTRY['dist-village'].onchange = 'onDistVillageChange()';
+  SD_REGISTRY['dist-farmer']  = SD_REGISTRY['dist-farmer']  || {};
+  SD_REGISTRY['cult-village'] = SD_REGISTRY['cult-village'] || {};
+  SD_REGISTRY['cult-village'].onchange = 'onCultVillageChange()';
+  SD_REGISTRY['cult-farmer']  = SD_REGISTRY['cult-farmer']  || {};
+  SD_REGISTRY['cult-farmer'].onchange  = 'onCultFarmerChange()';
+  SD_REGISTRY['harv-village'] = SD_REGISTRY['harv-village'] || {};
+  SD_REGISTRY['harv-village'].onchange = 'onHarvVillageChange()';
+  SD_REGISTRY['harv-farmer']  = SD_REGISTRY['harv-farmer']  || {};
+  SD_REGISTRY['harv-farmer'].onchange  = 'onHarvFarmerChange()';
+});
+
 </script>
 
 <!-- ════ FOOTER ════ -->
